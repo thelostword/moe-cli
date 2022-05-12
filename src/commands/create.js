@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-05-12 14:34:19
- * @LastEditTime: 2022-05-12 18:48:47
+ * @LastEditTime: 2022-05-12 18:55:38
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\commands\create.js
@@ -116,6 +116,14 @@ class Creator {
         delete packageObj.devDependencies.tslib;
         delete packageObj.devDependencies['ts-jest'];
         delete packageObj.types;
+
+        const eslintObj = fs.readJsonSync(path.join(...prefix, '.eslintrc.json'));
+        eslintObj.extends = eslintObj.extends.filter((item) => !item.includes('typescript'));
+        delete eslintObj.parser;
+        delete eslintObj.parserOptions.project;
+        eslintObj.plugins = eslintObj.plugins.filter((item) => !item.includes('typescript'));
+        eslintObj.rules = eslintObj.rules.filter((item) => !item.includes('typescript'));
+        fs.writeJsonSync(path.join(...prefix, '.eslintrc.json'), eslintObj);
       }
 
       if (!this.createdConfig.options.includes('ESlint')) {
@@ -127,14 +135,6 @@ class Creator {
         delete packageObj.devDependencies['eslint-plugin-import'];
         delete packageObj.devDependencies['@typescript-eslint/parser'];
         delete packageObj.devDependencies['@typescript-eslint/eslint-plugin'];
-
-        const eslintObj = fs.readJsonSync(path.join(...prefix, '.eslintrc.json'));
-        eslintObj.extends = eslintObj.extends.filter((item) => !item.includes('typescript'));
-        delete eslintObj.parser;
-        delete eslintObj.parserOptions.project;
-        eslintObj.plugins = eslintObj.plugins.filter((item) => !item.includes('typescript'));
-        eslintObj.rules = eslintObj.rules.filter((item) => !item.includes('typescript'));
-        fs.writeJsonSync(path.join(...prefix, '.eslintrc.json'), eslintObj);
       }
 
       if (!this.createdConfig.options.includes('Jest')) {

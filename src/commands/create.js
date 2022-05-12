@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-05-12 14:34:19
- * @LastEditTime: 2022-05-12 18:55:38
+ * @LastEditTime: 2022-05-12 18:59:40
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\commands\create.js
@@ -41,10 +41,12 @@ class Creator {
     // 选择配置
     await this.selectOptions();
     // 下载模板
-    await this.downloadTemplate(this.createdConfig.template);
-    // 根据配置修改模板内容
-    await this.modifyTemplate();
-    logger.success(`${this.projectName} 创建成功!`);
+    const res = await this.downloadTemplate(this.createdConfig.template);
+    if (res) {
+      // 根据配置修改模板内容
+      await this.modifyTemplate();
+      logger.success(`${this.projectName} 创建成功!`);
+    }
   }
 
   // 选择模板
@@ -79,12 +81,13 @@ class Creator {
   // 下载模板
   async downloadTemplate(templateUrl) {
     // 模板下载地址
-    await spinner(
+    const res = await spinner(
       '正在拉取...',
       this.downloadGitRepo,
       templateUrl,
       path.join(process.cwd(), this.projectName),
     );
+    return res;
   }
 
   // 根据配置修改模板内容

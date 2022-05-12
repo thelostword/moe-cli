@@ -4,7 +4,9 @@
     "name": "rollup-template",
     "options": [
       "TypeScript",
-      "ESlint"
+      "ESlint",
+      "Jest",
+      "Scss"
     ]
   },
   {

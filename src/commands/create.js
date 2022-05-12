@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-05-12 14:34:19
- * @LastEditTime: 2022-05-12 17:18:56
+ * @LastEditTime: 2022-05-12 18:48:47
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\commands\create.js
@@ -17,11 +17,11 @@ const spinner = require('../utils/spinner');
 const repoList = require('../repo.json');
 
 class Creator {
-  constructor(porjectName, target) {
-    this.porjectName = porjectName;
+  constructor(projectName, target) {
+    this.projectName = projectName;
     this.target = target;
     this.downloadGitRepo = promisify(downloadGitRepo);
-    this.createdOptions = {
+    this.createdConfig = {
       template: '',
       options: [],
     };
@@ -29,7 +29,7 @@ class Creator {
 
   async create() {
     const cwd = process.cwd();
-    const targetDirectory = path.join(cwd, this.porjectName);
+    const targetDirectory = path.join(cwd, this.projectName);
 
     // 判断目录是否存在
     if (fs.existsSync(targetDirectory)) {
@@ -41,8 +41,10 @@ class Creator {
     // 选择配置
     await this.selectOptions();
     // 下载模板
-    await this.downloadTemplate(this.createdOptions.template);
+    await this.downloadTemplate(this.createdConfig.template);
     // 根据配置修改模板内容
+    await this.modifyTemplate();
+    logger.success(`${this.projectName} 创建成功!`);
   }
 
   // 选择模板
@@ -55,12 +57,12 @@ class Creator {
         choices: repoList,
       },
     ]);
-    this.createdOptions.template = selectedTemplate;
+    this.createdConfig.template = selectedTemplate;
   }
 
   // 选择配置
   async selectOptions() {
-    const selectedTemplate = repoList.find((item) => item.value === this.createdOptions.template);
+    const selectedTemplate = repoList.find((item) => item.value === this.createdConfig.template);
     if (selectedTemplate.options.length) {
       const { selectedOptions } = await inquirer.prompt([
         {
@@ -70,7 +72,7 @@ class Creator {
           choices: selectedTemplate.options,
         },
       ]);
-      this.createdOptions.options = selectedOptions;
+      this.createdConfig.options = selectedOptions;
     }
   }
 
@@ -81,9 +83,78 @@ class Creator {
       '正在拉取...',
       this.downloadGitRepo,
       templateUrl,
-      path.join(process.cwd(), this.porjectName),
+      path.join(process.cwd(), this.projectName),
     );
-    logger.success('下载完成!');
+  }
+
+  // 根据配置修改模板内容
+  async modifyTemplate() {
+    const prefix = [process.cwd(), this.projectName];
+    // 读取package.json
+    const packageObj = fs.readJsonSync(path.join(...prefix, 'package.json'));
+
+    // 修改package.json
+    packageObj.name = this.projectName;
+    packageObj.description = this.projectName;
+    packageObj.main = `lib/${this.projectName}.cjs.js`;
+    packageObj.module = `lib/${this.projectName}.esm.js`;
+    packageObj.repository.url = `git+https://github.com/thelostword/${this.projectName}.git`;
+    packageObj.bugs.url = `https://github.com/thelostword/${this.projectName}/issues`;
+    packageObj.homepage = `https://github.com/thelostword/${this.projectName}#readme`;
+
+    // rollup-template
+    if (this.createdConfig.template === 'github:thelostword/rollup-template') {
+      if (!this.createdConfig.options.includes('TypeScript')) {
+        fs.removeSync(path.join(...prefix, 'tsconfig.json'));
+        fs.removeSync(path.join(...prefix, 'tsconfig.eslint.json'));
+        delete packageObj.devDependencies['@rollup/plugin-typescript'];
+        delete packageObj.devDependencies['@typescript-eslint/eslint-plugin'];
+        packageObj.devDependencies['eslint-config-airbnb-base'] = '^15.0.0';
+        delete packageObj.devDependencies['@typescript-eslint/parser'];
+        delete packageObj.devDependencies['eslint-config-airbnb-typescript'];
+        delete packageObj.devDependencies.typescript;
+        delete packageObj.devDependencies.tslib;
+        delete packageObj.devDependencies['ts-jest'];
+        delete packageObj.types;
+      }
+
+      if (!this.createdConfig.options.includes('ESlint')) {
+        fs.removeSync(path.join(...prefix, '.eslintrc.json'));
+        fs.removeSync(path.join(...prefix, '.eslintignore'));
+        delete packageObj.devDependencies.eslint;
+        delete packageObj.devDependencies['eslint-config-airbnb-typescript'];
+        delete packageObj.devDependencies['eslint-config-airbnb-base'];
+        delete packageObj.devDependencies['eslint-plugin-import'];
+        delete packageObj.devDependencies['@typescript-eslint/parser'];
+        delete packageObj.devDependencies['@typescript-eslint/eslint-plugin'];
+
+        const eslintObj = fs.readJsonSync(path.join(...prefix, '.eslintrc.json'));
+        eslintObj.extends = eslintObj.extends.filter((item) => !item.includes('typescript'));
+        delete eslintObj.parser;
+        delete eslintObj.parserOptions.project;
+        eslintObj.plugins = eslintObj.plugins.filter((item) => !item.includes('typescript'));
+        eslintObj.rules = eslintObj.rules.filter((item) => !item.includes('typescript'));
+        fs.writeJsonSync(path.join(...prefix, '.eslintrc.json'), eslintObj);
+      }
+
+      if (!this.createdConfig.options.includes('Jest')) {
+        fs.removeSync(path.join(...prefix, 'jest.config.js'));
+        fs.removeSync(path.join(...prefix, 'test'));
+        delete packageObj.devDependencies.jest;
+        delete packageObj.devDependencies['ts-jest'];
+        delete packageObj.devDependencies['@types/jest'];
+        delete packageObj.scripts.test;
+      }
+
+      if (!this.createdConfig.options.includes('Scss')) {
+        fs.removeSync(path.join(...prefix, 'src', 'styles'));
+        delete packageObj.devDependencies.sass;
+        delete packageObj.devDependencies['rollup-plugin-scss'];
+      }
+    }
+
+    // 写入修改后的package.json
+    fs.writeJsonSync(path.join(...prefix, 'package.json'), packageObj);
   }
 }
 

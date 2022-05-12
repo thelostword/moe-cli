@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-04-01 16:05:12
- * @LastEditTime: 2022-05-12 16:00:06
+ * @LastEditTime: 2022-05-12 18:34:02
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\index.js
@@ -24,8 +24,7 @@ program.on('--help', () => {
 // create 指令
 program
   .command('create <project-name>')
-  .description('create a new project')
-  .option('-f, --force', 'overwrite target directory if it exists')
+  .description('创建项目')
   .action((name, cmd) => {
     const creator = new Creator(name, cmd);
     creator.create();

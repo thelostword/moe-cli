@@ -1,0 +1,15 @@
+[
+  {
+    "value": "github:thelostword/rollup-template",
+    "name": "rollup-template",
+    "options": [
+      "TypeScript",
+      "ESlint"
+    ]
+  },
+  {
+    "value": "github:thelostword/vite-vue3-template",
+    "name": "vite-vue3-template",
+    "options": []
+  }
+]

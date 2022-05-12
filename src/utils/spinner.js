@@ -18,7 +18,7 @@ async function func(message, fn, ...args) {
     return executeRes;
   } catch (error) {
     spinner.fail('request fail, refetching');
-    return error;
+    return null;
   }
 }
 

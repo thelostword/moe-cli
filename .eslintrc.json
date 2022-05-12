@@ -18,7 +18,6 @@
     "import/extensions": 0,
     "no-underscore-dangle": 0,
     "lines-between-class-members": 0,
-    "no-useless-return": 0,
-    "new-cap": 0
+    "no-useless-return": 0
   }
 }

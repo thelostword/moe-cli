@@ -1,0 +1,10 @@
+.vscode
+node_modules
+example
+src
+test
+jest.config.js
+rollup.config.js
+tsconfig.json
+tsconfig.eslint.json
+pnpm-lock.yaml

@@ -30,8 +30,10 @@
     "download-git-repo": "^3.0.2",
     "fs-extra": "^10.1.0",
     "inquirer": "^8.2.4",
+    "minimist": "^1.2.6",
     "ora": "5.x",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "shelljs": "^0.8.5"
   },
   "devDependencies": {
     "eslint": "^8.15.0",

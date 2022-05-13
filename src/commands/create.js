@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-05-12 14:34:19
- * @LastEditTime: 2022-05-12 18:59:40
+ * @LastEditTime: 2022-05-13 10:41:38
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\commands\create.js
@@ -12,14 +12,15 @@ const fs = require('fs-extra');
 const inquirer = require('inquirer');
 const downloadGitRepo = require('download-git-repo');
 const { promisify } = require('util');
+const shell = require('shelljs');
 const logger = require('../utils/logger');
 const spinner = require('../utils/spinner');
 const repoList = require('../repo.json');
 
 class Creator {
-  constructor(projectName, target) {
+  constructor(projectName, options) {
     this.projectName = projectName;
-    this.target = target;
+    this.options = options;
     this.downloadGitRepo = promisify(downloadGitRepo);
     this.createdConfig = {
       template: '',
@@ -69,7 +70,7 @@ class Creator {
       const { selectedOptions } = await inquirer.prompt([
         {
           type: 'checkbox',
-          message: '请选择配置',
+          message: '请选择需要的依赖',
           name: 'selectedOptions',
           choices: selectedTemplate.options,
         },
@@ -158,6 +159,13 @@ class Creator {
 
     // 写入修改后的package.json
     fs.writeJsonSync(path.join(...prefix, 'package.json'), packageObj);
+
+    if ('git' in this.options) {
+      shell.exec(`cd ${path.join(...prefix)} && git init`);
+    } else {
+      fs.removeSync(path.join(...prefix, '.git'));
+      fs.removeSync(path.join(...prefix, '.gitignore'));
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-04-01 16:05:12
- * @LastEditTime: 2022-05-12 18:34:02
+ * @LastEditTime: 2022-05-13 10:29:38
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\index.js
@@ -9,6 +9,7 @@
 
 const { program } = require('commander');
 const chalk = require('chalk');
+const minimist = require('minimist');
 const Creator = require('./commands/create');
 const pkg = require('../package.json');
 
@@ -23,10 +24,15 @@ program.on('--help', () => {
 
 // create 指令
 program
-  .command('create <project-name>')
+  .command('create <app-name>')
   .description('创建项目')
-  .action((name, cmd) => {
-    const creator = new Creator(name, cmd);
+  .option('-d, --default', '使用默认配置')
+  .option('-g, --git', '初始化git')
+  .action((name, options) => {
+    console.log(process.argv.slice(3));
+    console.log(minimist(process.argv.slice(3))._);
+
+    const creator = new Creator(name, options);
     creator.create();
   });
 

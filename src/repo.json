@@ -12,6 +12,9 @@
   {
     "value": "github:thelostword/vite-vue3-template",
     "name": "vite-vue3-template",
-    "options": []
+    "options": [
+      "ESlint",
+      "commitlint"
+    ]
   }
 ]

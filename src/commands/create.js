@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-05-12 14:34:19
- * @LastEditTime: 2022-05-13 10:41:38
+ * @LastEditTime: 2022-05-18 15:05:12
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\commands\create.js
@@ -100,14 +100,15 @@ class Creator {
     // 修改package.json
     packageObj.name = this.projectName;
     packageObj.description = this.projectName;
-    packageObj.main = `lib/${this.projectName}.cjs.js`;
-    packageObj.module = `lib/${this.projectName}.esm.js`;
     packageObj.repository.url = `git+https://github.com/thelostword/${this.projectName}.git`;
     packageObj.bugs.url = `https://github.com/thelostword/${this.projectName}/issues`;
     packageObj.homepage = `https://github.com/thelostword/${this.projectName}#readme`;
 
     // rollup-template
     if (this.createdConfig.template === 'github:thelostword/rollup-template') {
+      packageObj.main = `lib/${this.projectName}.cjs.js`;
+      packageObj.module = `lib/${this.projectName}.esm.js`;
+
       if (!this.createdConfig.options.includes('TypeScript')) {
         fs.removeSync(path.join(...prefix, 'tsconfig.json'));
         fs.removeSync(path.join(...prefix, 'tsconfig.eslint.json'));
@@ -155,16 +156,50 @@ class Creator {
         delete packageObj.devDependencies.sass;
         delete packageObj.devDependencies['rollup-plugin-scss'];
       }
+    } else if (this.createdConfig.template === 'github:thelostword/vite-vue3-template') { // vite-vue3-template
+      if (!this.createdConfig.options.includes('ESlint')) {
+        fs.removeSync(path.join(...prefix, '.eslintrc.js'));
+        delete packageObj.devDependencies.eslint;
+        delete packageObj.devDependencies['eslint-config-airbnb-base'];
+        delete packageObj.devDependencies['eslint-import-resolver-alias'];
+        delete packageObj.devDependencies['eslint-plugin-import'];
+        delete packageObj.devDependencies['eslint-plugin-vue'];
+
+        delete packageObj.scripts.lint;
+        delete packageObj.scripts['lint:fix'];
+        // 移除提交前eslint检查
+        delete packageObj['lint-staged'];
+        delete packageObj.devDependencies['lint-staged'];
+        fs.removeSync(path.join(...prefix, '.husky/pre-commit'));
+      }
+      if (!this.createdConfig.options.includes('commitlint')) {
+        fs.removeSync(path.join(...prefix, '.commitlint.config.js'));
+
+        delete packageObj.devDependencies['@commitlint/cli'];
+        delete packageObj.devDependencies['@commitlint/config-conventional'];
+        delete packageObj.devDependencies['cz-conventional-changelog'];
+        delete packageObj.devDependencies['standard-version'];
+
+        delete packageObj.config.commitizen;
+        delete packageObj.scripts.cz;
+        delete packageObj.scripts.release;
+        delete packageObj.scripts['release:minor'];
+        delete packageObj.scripts['release:major'];
+        fs.removeSync(path.join(...prefix, '.husky/commit-msg'));
+      }
+      if (!this.createdConfig.options.includes('commitlint') && !this.createdConfig.options.includes('ESlint')) {
+        delete packageObj.devDependencies.husky;
+        delete packageObj.scripts.prepare;
+        fs.removeSync(path.join(...prefix, '.husky'));
+      }
     }
 
     // 写入修改后的package.json
     fs.writeJsonSync(path.join(...prefix, 'package.json'), packageObj);
 
+    fs.removeSync(path.join(...prefix, '.git'));
     if ('git' in this.options) {
       shell.exec(`cd ${path.join(...prefix)} && git init`);
-    } else {
-      fs.removeSync(path.join(...prefix, '.git'));
-      fs.removeSync(path.join(...prefix, '.gitignore'));
     }
   }
 }

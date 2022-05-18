@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-05-12 14:42:08
- * @LastEditTime: 2022-05-12 15:40:47
+ * @LastEditTime: 2022-05-18 15:17:31
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\utils\spinner.js
@@ -15,7 +15,7 @@ async function func(message, fn, ...args) {
   try {
     const executeRes = await fn(...args);
     spinner.succeed();
-    return executeRes;
+    return executeRes || 1;
   } catch (error) {
     spinner.fail('request fail, refetching');
     return null;

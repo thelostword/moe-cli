@@ -1,7 +1,7 @@
 /*
  * @Author: losting
  * @Date: 2022-05-12 14:34:19
- * @LastEditTime: 2022-05-18 15:05:12
+ * @LastEditTime: 2022-05-18 15:46:41
  * @LastEditors: losting
  * @Description:
  * @FilePath: \moe-cli\src\commands\create.js
@@ -41,6 +41,8 @@ class Creator {
     await this.selectTemplate();
     // 选择配置
     await this.selectOptions();
+    // 其他配置
+    await this.otherOptions();
     // 下载模板
     const res = await this.downloadTemplate(this.createdConfig.template);
     if (res) {
@@ -79,6 +81,34 @@ class Creator {
     }
   }
 
+  // 其他配置
+  async otherOptions() {
+    if (this.createdConfig.template === 'github:thelostword/vite-vue3-template') {
+      if (this.createdConfig.options.includes('ESlint')) {
+        const { isValidateEslintPass } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            message: '是否Eslint校验通过才能提交?',
+            name: 'isValidateEslintPass',
+            default: true,
+          },
+        ]);
+        this.createdConfig.isValidateEslintPass = isValidateEslintPass;
+      }
+      if (this.createdConfig.options.includes('commitlint')) {
+        const { isValidateCommitMsg } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            message: '是否校验commit提交信息?',
+            name: 'isValidateCommitMsg',
+            default: true,
+          },
+        ]);
+        this.createdConfig.isValidateCommitMsg = isValidateCommitMsg;
+      }
+    }
+  }
+
   // 下载模板
   async downloadTemplate(templateUrl) {
     // 模板下载地址
@@ -99,15 +129,15 @@ class Creator {
 
     // 修改package.json
     packageObj.name = this.projectName;
-    packageObj.description = this.projectName;
-    packageObj.repository.url = `git+https://github.com/thelostword/${this.projectName}.git`;
-    packageObj.bugs.url = `https://github.com/thelostword/${this.projectName}/issues`;
-    packageObj.homepage = `https://github.com/thelostword/${this.projectName}#readme`;
 
     // rollup-template
     if (this.createdConfig.template === 'github:thelostword/rollup-template') {
       packageObj.main = `lib/${this.projectName}.cjs.js`;
       packageObj.module = `lib/${this.projectName}.esm.js`;
+      packageObj.description = this.projectName;
+      packageObj.repository.url = `git+https://github.com/thelostword/${this.projectName}.git`;
+      packageObj.bugs.url = `https://github.com/thelostword/${this.projectName}/issues`;
+      packageObj.homepage = `https://github.com/thelostword/${this.projectName}#readme`;
 
       if (!this.createdConfig.options.includes('TypeScript')) {
         fs.removeSync(path.join(...prefix, 'tsconfig.json'));
@@ -171,9 +201,14 @@ class Creator {
         delete packageObj['lint-staged'];
         delete packageObj.devDependencies['lint-staged'];
         fs.removeSync(path.join(...prefix, '.husky/pre-commit'));
+      } else if (!this.createdConfig.isValidateEslintPass) {
+        delete packageObj['lint-staged'];
+        delete packageObj.devDependencies['lint-staged'];
+        fs.removeSync(path.join(...prefix, '.husky/pre-commit'));
       }
+
       if (!this.createdConfig.options.includes('commitlint')) {
-        fs.removeSync(path.join(...prefix, '.commitlint.config.js'));
+        fs.removeSync(path.join(...prefix, 'commitlint.config.js'));
 
         delete packageObj.devDependencies['@commitlint/cli'];
         delete packageObj.devDependencies['@commitlint/config-conventional'];
@@ -186,8 +221,16 @@ class Creator {
         delete packageObj.scripts['release:minor'];
         delete packageObj.scripts['release:major'];
         fs.removeSync(path.join(...prefix, '.husky/commit-msg'));
+      } else if (!this.createdConfig.isValidateCommitMsg) {
+        fs.removeSync(path.join(...prefix, '.husky/commit-msg'));
       }
+
       if (!this.createdConfig.options.includes('commitlint') && !this.createdConfig.options.includes('ESlint')) {
+        delete packageObj.devDependencies.husky;
+        delete packageObj.scripts.prepare;
+        fs.removeSync(path.join(...prefix, '.husky'));
+      }
+      if (!this.createdConfig.isValidateEslintPass && !this.createdConfig.isValidateCommitMsg) {
         delete packageObj.devDependencies.husky;
         delete packageObj.scripts.prepare;
         fs.removeSync(path.join(...prefix, '.husky'));
